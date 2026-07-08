@@ -1,0 +1,37 @@
+{% extends 'generic/object.html' %}
+{% load helpers %}
+{% block content %}
+<div class="row">
+  <div class="col col-md-6">
+    <div class="card">
+      <h2 class="card-header">WireGuard Peer</h2>
+      <table class="table table-hover attr-table">
+        <tr><th scope="row">Tunnel</th><td>{{ object.tunnel|linkify }}</td></tr>
+        <tr><th scope="row">Name</th><td>{{ object.name }}</td></tr>
+        <tr><th scope="row">Endpoint</th><td>{{ object.endpoint|placeholder }}</td></tr>
+        <tr><th scope="row">Endpoint port</th><td>{{ object.endpoint_port|placeholder }}</td></tr>
+        <tr><th scope="row">Persistent keepalive</th><td>{{ object.persistent_keepalive|placeholder }}</td></tr>
+        <tr><th scope="row">Enabled</th><td>{% checkmark object.enabled %}</td></tr>
+        <tr><th scope="row">Description</th><td>{{ object.description|placeholder }}</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h2 class="card-header">Keys (non-secret)</h2>
+      <table class="table table-hover attr-table">
+        <tr><th scope="row">Public key</th><td><code>{{ object.public_key|placeholder }}</code></td></tr>
+        <tr><th scope="row">Has pre-shared key</th><td>{% checkmark object.has_preshared_key %}</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="col col-md-6">
+    <div class="card">
+      <h2 class="card-header">Allowed IPs</h2>
+      <table class="table table-hover attr-table">
+        <tr><td><pre class="mb-0">{{ object.allowed_ips|placeholder }}</pre></td></tr>
+      </table>
+    </div>
+    {% include 'inc/panels/tags.html' %}
+    {% include 'inc/panels/custom_fields.html' %}
+  </div>
+</div>
+{% endblock %}

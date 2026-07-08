@@ -1,0 +1,40 @@
+{% extends 'generic/object.html' %}
+{% load helpers %}
+{% block content %}
+<div class="row">
+  <div class="col col-md-6">
+    <div class="card">
+      <h2 class="card-header">WireGuard Tunnel</h2>
+      <table class="table table-hover attr-table">
+        <tr><th scope="row">Device</th><td>{{ object.device|linkify }}</td></tr>
+        <tr><th scope="row">Name</th><td>{{ object.name }}</td></tr>
+        <tr><th scope="row">Listen port</th><td>{{ object.listen_port|placeholder }}</td></tr>
+        <tr><th scope="row">Address</th><td>{{ object.address|placeholder }}</td></tr>
+        <tr><th scope="row">MTU</th><td>{{ object.mtu|placeholder }}</td></tr>
+        <tr><th scope="row">Enabled</th><td>{% checkmark object.enabled %}</td></tr>
+        <tr><th scope="row">Description</th><td>{{ object.description|placeholder }}</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h2 class="card-header">Key (non-secret)</h2>
+      <table class="table table-hover attr-table">
+        <tr><th scope="row">Public key</th><td><code>{{ object.public_key|placeholder }}</code></td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="col col-md-6">
+    <div class="card">
+      <h2 class="card-header">Peers</h2>
+      <table class="table table-hover attr-table">
+        {% for peer in object.peers.all %}
+        <tr><td>{{ peer|linkify }}</td><td>{{ peer.endpoint|placeholder }}</td></tr>
+        {% empty %}
+        <tr><td colspan="2" class="text-muted">No peers</td></tr>
+        {% endfor %}
+      </table>
+    </div>
+    {% include 'inc/panels/tags.html' %}
+    {% include 'inc/panels/custom_fields.html' %}
+  </div>
+</div>
+{% endblock %}
