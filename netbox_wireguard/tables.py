@@ -8,13 +8,15 @@ class WireGuardTunnelTable(NetBoxTable):
     device = tables.Column(linkify=True)
     name = tables.Column(linkify=True)
     enabled = columns.BooleanColumn()
+    assign_interface = columns.BooleanColumn()
     tags = columns.TagColumn(url_name="plugins:netbox_wireguard:wireguardtunnel_list")
 
     class Meta(NetBoxTable.Meta):
         model = WireGuardTunnel
         fields = (
             "pk", "id", "device", "name", "listen_port", "address", "public_key", "mtu",
-            "enabled", "description", "tags", "created", "last_updated",
+            "enabled", "assign_interface", "interface_name", "wg_instance",
+            "description", "tags", "created", "last_updated",
         )
         default_columns = ("device", "name", "listen_port", "address", "enabled")
 

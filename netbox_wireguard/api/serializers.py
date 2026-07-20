@@ -14,6 +14,7 @@ class WireGuardTunnelSerializer(NetBoxModelSerializer):
         fields = [
             "id", "url", "display", "device", "name", "listen_port", "address",
             "public_key", "mtu", "description", "enabled",
+            "assign_interface", "interface_name", "wg_instance",
             "tags", "custom_fields", "created", "last_updated",
         ]
         brief_fields = ["id", "url", "display", "device", "name"]

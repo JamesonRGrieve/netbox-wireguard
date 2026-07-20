@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """Model tests against a real DB (no mocks): creation, str, constraints, FK behaviour."""
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.utils import IntegrityError
 from django.test import TestCase
@@ -43,6 +44,29 @@ class WireGuardTunnelModelTest(TestCase):
         """Topology only: the model must NOT expose a private key column."""
         field_names = {f.name for f in WireGuardTunnel._meta.get_fields()}
         self.assertNotIn("private_key", field_names)
+
+    def test_interface_assignment_defaults(self):
+        t = WireGuardTunnel.objects.create(device=self.device, name="tun_wg0")
+        self.assertFalse(t.assign_interface)
+        self.assertEqual(t.interface_name, "")
+        self.assertIsNone(t.wg_instance)
+
+    def test_assigned_interface_valid(self):
+        t = WireGuardTunnel(
+            device=self.device, name="tun_wg0", assign_interface=True,
+            interface_name="WG_RW", wg_instance=0,
+        )
+        t.full_clean()  # must not raise; wg_instance=0 (wg0) is valid, not "missing"
+        t.save()
+        self.assertEqual(t.interface_name, "WG_RW")
+        self.assertEqual(t.wg_instance, 0)
+
+    def test_assign_interface_requires_name_and_instance(self):
+        t = WireGuardTunnel(device=self.device, name="tun_wg0", assign_interface=True)
+        with self.assertRaises(ValidationError) as ctx:
+            t.full_clean()
+        self.assertIn("interface_name", ctx.exception.message_dict)
+        self.assertIn("wg_instance", ctx.exception.message_dict)
 
 
 class WireGuardPeerModelTest(TestCase):

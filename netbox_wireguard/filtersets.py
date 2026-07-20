@@ -20,11 +20,15 @@ class WireGuardTunnelFilterSet(NetBoxModelFilterSet):
 
     class Meta:
         model = WireGuardTunnel
-        fields = ["id", "name", "listen_port", "address", "public_key", "mtu", "enabled"]
+        fields = [
+            "id", "name", "listen_port", "address", "public_key", "mtu", "enabled",
+            "assign_interface", "interface_name", "wg_instance",
+        ]
 
     def search(self, queryset, name, value):
         return queryset.filter(
-            Q(name__icontains=value) | Q(address__icontains=value) | Q(description__icontains=value)
+            Q(name__icontains=value) | Q(address__icontains=value)
+            | Q(interface_name__icontains=value) | Q(description__icontains=value)
         )
 
 

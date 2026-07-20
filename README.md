@@ -29,7 +29,12 @@ without ever holding the value.
 
 - **WireGuardTunnel** — `device` FK + `name` (e.g. `tun_wg0`) + `listen_port` +
   `address` (interface CIDR, may be blank) + `public_key` (non-secret) + `mtu` +
-  `description` + `enabled`. Unique per `(device, name)`.
+  `description` + `enabled`. Interface assignment (opt-in): `assign_interface` (bool) +
+  `interface_name` (stable descr rules target, e.g. `WG_RW`) + `wg_instance`
+  (→ device `wg<instance>`); `interface_name` and `wg_instance` are required when
+  `assign_interface` is set (model `clean()`), so the `ansible-tofu` reconciler can
+  assign the tunnel as an OPNsense/pfSense interface and resolve rule targets by name.
+  Unique per `(device, name)`.
 - **WireGuardPeer** — `tunnel` FK + `name` (peer descr) + `public_key` + `endpoint` +
   `endpoint_port` + `allowed_ips` (one CIDR per line / comma-separated) +
   `persistent_keepalive` + `has_preshared_key` (flag only) + `description` + `enabled`.

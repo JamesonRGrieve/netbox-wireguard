@@ -13,6 +13,7 @@ class WireGuardTunnelForm(NetBoxModelForm):
     fieldsets = (
         FieldSet("device", "name", "enabled", name="Tunnel"),
         FieldSet("listen_port", "address", "mtu", name="Interface"),
+        FieldSet("assign_interface", "interface_name", "wg_instance", name="Interface assignment"),
         FieldSet("public_key", name="Key (non-secret)"),
         FieldSet("description", "tags", name="Misc"),
     )
@@ -21,6 +22,7 @@ class WireGuardTunnelForm(NetBoxModelForm):
         model = WireGuardTunnel
         fields = [
             "device", "name", "listen_port", "address", "public_key", "mtu",
+            "assign_interface", "interface_name", "wg_instance",
             "description", "enabled", "tags",
         ]
 

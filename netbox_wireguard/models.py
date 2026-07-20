@@ -5,6 +5,7 @@ Tunnel private keys and per-peer pre-shared keys live in OpenBao, never here. Ea
 non-secret WireGuard field is a real column → a zero-loss SoT for the intended topology,
 which the ansible-tofu reconcilers read back 1:1.
 """
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
 from netbox.models import NetBoxModel
@@ -32,6 +33,18 @@ class WireGuardTunnel(NetBoxModel):
     mtu = models.PositiveIntegerField(null=True, blank=True)
     description = models.CharField(max_length=200, blank=True)
     enabled = models.BooleanField(default=True)
+    assign_interface = models.BooleanField(
+        default=False,
+        help_text="Assign this tunnel as an OPNsense/pfSense interface (optN) so firewall/NAT rules can target it by name.",
+    )
+    interface_name = models.CharField(
+        max_length=64, blank=True,
+        help_text="Interface description when assigned (e.g. WG_RW); the stable name rules reference. Required when assign_interface is set.",
+    )
+    wg_instance = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        help_text="WireGuard instance number → interface device wg<instance> (e.g. 0 → wg0). Required when assign_interface is set.",
+    )
 
     class Meta:
         ordering = ["device", "name"]
@@ -41,6 +54,13 @@ class WireGuardTunnel(NetBoxModel):
                 fields=["device", "name"], name="netbox_wireguard_tunnel_device_name"
             ),
         ]
+
+    def clean(self):
+        super().clean()
+        if self.assign_interface:
+            missing = [f for f in ("interface_name", "wg_instance") if not getattr(self, f) and getattr(self, f) != 0]
+            if missing:
+                raise ValidationError({f: "Required when assign_interface is set." for f in missing})
 
     def __str__(self):
         return f"{self.device}: {self.name}"
