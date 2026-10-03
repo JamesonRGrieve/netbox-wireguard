@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 """netbox-wireguard: a native NetBox source of truth for the **non-secret** topology of
-WireGuard tunnels and peers on OPNsense/pfSense (and any host modeled as a ``dcim.Device``).
+WireGuard tunnels and peers on OPNsense/pfSense, or any host modeled as a ``dcim.Device`` or a
+``virtualization.VirtualMachine``.
 
 WireGuard config splits into a secret half (the tunnel private key + per-peer pre-shared
 keys) and a non-secret half (interfaces, ports, addresses, public keys, allowed-IPs,
@@ -11,7 +12,7 @@ boolean flags *that* a PSK exists, never its value.
 """
 from netbox.plugins import PluginConfig
 
-__version__ = "0.0.1"
+__version__ = "0.1.0"
 
 
 class NetBoxWireGuardConfig(PluginConfig):

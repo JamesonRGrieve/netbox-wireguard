@@ -4,22 +4,27 @@
 Endpoints are mounted at /api/plugins/wireguard/tunnels/ and /api/plugins/wireguard/peers/.
 """
 from utilities.testing import APIViewTestCases, create_test_device
+from virtualization.models import Cluster, ClusterType, VirtualMachine
 from netbox_wireguard.models import WireGuardPeer, WireGuardTunnel
 
 
-class _CRUD(
+# A tuple of bases, not a base class: a TestCase subclass with no model would itself be
+# collected and every inherited test would error.
+_CRUD = (
     APIViewTestCases.GetObjectViewTestCase,
     APIViewTestCases.ListObjectsViewTestCase,
     APIViewTestCases.CreateObjectViewTestCase,
     APIViewTestCases.UpdateObjectViewTestCase,
     APIViewTestCases.DeleteObjectViewTestCase,
-):
-    pass
+)
+# Plugin API URLs live under the `plugins-api` namespace; NetBox appends `-api`.
+VIEW_NAMESPACE = "plugins-api:netbox_wireguard"
 
 
-class WireGuardTunnelAPITest(_CRUD):
+class WireGuardTunnelAPITest(*_CRUD):
+    view_namespace = VIEW_NAMESPACE
     model = WireGuardTunnel
-    brief_fields = ["device", "display", "id", "name", "url"]
+    brief_fields = ["device", "display", "id", "name", "url", "virtual_machine"]
     bulk_update_data = {"enabled": False}
 
     @classmethod
@@ -38,7 +43,34 @@ class WireGuardTunnelAPITest(_CRUD):
         ]
 
 
-class WireGuardPeerAPITest(_CRUD):
+class WireGuardVMTunnelAPITest(*_CRUD):
+    """Tunnels hosted on a virtual machine (e.g. a guest's own VPN client)."""
+    view_namespace = VIEW_NAMESPACE
+    model = WireGuardTunnel
+    brief_fields = ["device", "display", "id", "name", "url", "virtual_machine"]
+    bulk_update_data = {"dns": "10.128.0.1"}
+
+    @classmethod
+    def setUpTestData(cls):
+        cluster_type = ClusterType.objects.create(name="ct1", slug="ct1")
+        vm = VirtualMachine.objects.create(
+            name="vm1", cluster=Cluster.objects.create(name="cluster1", type=cluster_type),
+        )
+        WireGuardTunnel.objects.bulk_create([
+            WireGuardTunnel(virtual_machine=vm, name="wg-airvpn1", address="10.150.0.2/32"),
+            WireGuardTunnel(virtual_machine=vm, name="wg-airvpn2"),
+            WireGuardTunnel(virtual_machine=vm, name="wg-airvpn3"),
+        ])
+        cls.create_data = [
+            {"virtual_machine": vm.pk, "name": "wg-a", "address": "10.150.0.5/32",
+             "dns": "10.128.0.1", "mtu": 1320},
+            {"virtual_machine": vm.pk, "name": "wg-b", "wg_instance": 2},
+            {"virtual_machine": vm.pk, "name": "wg-c", "enabled": False},
+        ]
+
+
+class WireGuardPeerAPITest(*_CRUD):
+    view_namespace = VIEW_NAMESPACE
     model = WireGuardPeer
     brief_fields = ["display", "id", "name", "tunnel", "url"]
     bulk_update_data = {"enabled": False}

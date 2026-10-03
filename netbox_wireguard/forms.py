@@ -4,15 +4,17 @@ from django import forms
 from netbox.forms import NetBoxModelFilterSetForm, NetBoxModelForm
 from utilities.forms.fields import DynamicModelChoiceField, DynamicModelMultipleChoiceField, TagFilterField
 from utilities.forms.rendering import FieldSet
+from virtualization.models import VirtualMachine
 from .models import WireGuardPeer, WireGuardTunnel
 
 
 class WireGuardTunnelForm(NetBoxModelForm):
-    device = DynamicModelChoiceField(queryset=Device.objects.all())
+    device = DynamicModelChoiceField(queryset=Device.objects.all(), required=False)
+    virtual_machine = DynamicModelChoiceField(queryset=VirtualMachine.objects.all(), required=False)
 
     fieldsets = (
-        FieldSet("device", "name", "enabled", name="Tunnel"),
-        FieldSet("listen_port", "address", "mtu", name="Interface"),
+        FieldSet("device", "virtual_machine", "name", "enabled", name="Tunnel"),
+        FieldSet("listen_port", "address", "mtu", "dns", name="Interface"),
         FieldSet("assign_interface", "interface_name", "wg_instance", name="Interface assignment"),
         FieldSet("public_key", name="Key (non-secret)"),
         FieldSet("description", "tags", name="Misc"),
@@ -21,8 +23,8 @@ class WireGuardTunnelForm(NetBoxModelForm):
     class Meta:
         model = WireGuardTunnel
         fields = [
-            "device", "name", "listen_port", "address", "public_key", "mtu",
-            "assign_interface", "interface_name", "wg_instance",
+            "device", "virtual_machine", "name", "listen_port", "address", "public_key", "mtu",
+            "dns", "assign_interface", "interface_name", "wg_instance",
             "description", "enabled", "tags",
         ]
 
@@ -48,6 +50,7 @@ class WireGuardPeerForm(NetBoxModelForm):
 class WireGuardTunnelFilterForm(NetBoxModelFilterSetForm):
     model = WireGuardTunnel
     device_id = DynamicModelMultipleChoiceField(queryset=Device.objects.all(), required=False, label="Device")
+    virtual_machine_id = DynamicModelMultipleChoiceField(queryset=VirtualMachine.objects.all(), required=False, label="VM")
     enabled = forms.NullBooleanField(required=False)
     tag = TagFilterField(WireGuardTunnel)
 

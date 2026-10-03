@@ -5,6 +5,7 @@ from django.db import transaction
 from django.db.utils import IntegrityError
 from django.test import TestCase
 from utilities.testing import create_test_device
+from virtualization.models import Cluster, ClusterType, VirtualMachine
 from netbox_wireguard.models import WireGuardPeer, WireGuardTunnel
 
 
@@ -61,12 +62,73 @@ class WireGuardTunnelModelTest(TestCase):
         self.assertEqual(t.interface_name, "WG_RW")
         self.assertEqual(t.wg_instance, 0)
 
+    def test_dns_defaults_blank_and_roundtrips(self):
+        t = WireGuardTunnel.objects.create(device=self.device, name="tun_wg0")
+        self.assertEqual(t.dns, "")
+        t.dns = "10.128.0.1, fd7d:76ee:e68f:a993::1"
+        t.save()
+        t.refresh_from_db()
+        self.assertEqual(t.dns, "10.128.0.1, fd7d:76ee:e68f:a993::1")
+
     def test_assign_interface_requires_name_and_instance(self):
         t = WireGuardTunnel(device=self.device, name="tun_wg0", assign_interface=True)
         with self.assertRaises(ValidationError) as ctx:
             t.full_clean()
         self.assertIn("interface_name", ctx.exception.message_dict)
         self.assertIn("wg_instance", ctx.exception.message_dict)
+
+
+class WireGuardTunnelHostTest(TestCase):
+    """A tunnel lives on exactly one host: a device or a virtual machine."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.device = create_test_device("fw1")
+        cluster_type = ClusterType.objects.create(name="ct1", slug="ct1")
+        cluster = Cluster.objects.create(name="cluster1", type=cluster_type)
+        cls.vm = VirtualMachine.objects.create(name="vm1", cluster=cluster)
+
+    def test_vm_host_str_and_host(self):
+        t = WireGuardTunnel.objects.create(virtual_machine=self.vm, name="wg-airvpn1")
+        self.assertIsNone(t.device)
+        self.assertEqual(t.host, self.vm)
+        self.assertEqual(str(t), f"{self.vm}: wg-airvpn1")
+        t.full_clean()
+
+    def test_device_host(self):
+        t = WireGuardTunnel.objects.create(device=self.device, name="tun_wg0")
+        self.assertEqual(t.host, self.device)
+
+    def test_clean_rejects_no_host(self):
+        with self.assertRaises(ValidationError):
+            WireGuardTunnel(name="orphan").full_clean()
+
+    def test_clean_rejects_both_hosts(self):
+        with self.assertRaises(ValidationError):
+            WireGuardTunnel(device=self.device, virtual_machine=self.vm, name="both").full_clean()
+
+    def test_db_rejects_no_host(self):
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            WireGuardTunnel.objects.create(name="orphan")
+
+    def test_db_rejects_both_hosts(self):
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            WireGuardTunnel.objects.create(device=self.device, virtual_machine=self.vm, name="both")
+
+    def test_unique_vm_name(self):
+        WireGuardTunnel.objects.create(virtual_machine=self.vm, name="wg-airvpn1")
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            WireGuardTunnel.objects.create(virtual_machine=self.vm, name="wg-airvpn1")
+
+    def test_same_name_on_device_and_vm_allowed(self):
+        WireGuardTunnel.objects.create(device=self.device, name="wg0")
+        t = WireGuardTunnel.objects.create(virtual_machine=self.vm, name="wg0")
+        self.assertEqual(t.host, self.vm)
+
+    def test_cascade_delete_with_vm(self):
+        WireGuardTunnel.objects.create(virtual_machine=self.vm, name="wg-airvpn1")
+        self.vm.delete()
+        self.assertEqual(WireGuardTunnel.objects.count(), 0)
 
 
 class WireGuardPeerModelTest(TestCase):

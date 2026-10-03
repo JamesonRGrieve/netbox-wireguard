@@ -6,11 +6,13 @@
     <div class="card">
       <h2 class="card-header">WireGuard Tunnel</h2>
       <table class="table table-hover attr-table">
-        <tr><th scope="row">Device</th><td>{{ object.device|linkify }}</td></tr>
+        <tr><th scope="row">Device</th><td>{{ object.device|linkify|placeholder }}</td></tr>
+        <tr><th scope="row">Virtual machine</th><td>{{ object.virtual_machine|linkify|placeholder }}</td></tr>
         <tr><th scope="row">Name</th><td>{{ object.name }}</td></tr>
         <tr><th scope="row">Listen port</th><td>{{ object.listen_port|placeholder }}</td></tr>
         <tr><th scope="row">Address</th><td>{{ object.address|placeholder }}</td></tr>
         <tr><th scope="row">MTU</th><td>{{ object.mtu|placeholder }}</td></tr>
+        <tr><th scope="row">DNS</th><td>{{ object.dns|placeholder }}</td></tr>
         <tr><th scope="row">Enabled</th><td>{% checkmark object.enabled %}</td></tr>
         <tr><th scope="row">Description</th><td>{{ object.description|placeholder }}</td></tr>
       </table>

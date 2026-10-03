@@ -3,6 +3,7 @@ import django_filters
 from dcim.models import Device
 from django.db.models import Q
 from netbox.filtersets import NetBoxModelFilterSet
+from virtualization.models import VirtualMachine
 from .models import WireGuardPeer, WireGuardTunnel
 
 
@@ -17,11 +18,18 @@ class WireGuardTunnelFilterSet(NetBoxModelFilterSet):
         field_name="device__name", to_field_name="name", queryset=Device.objects.all(),
         label="Device (name)",
     )
+    virtual_machine_id = django_filters.ModelMultipleChoiceFilter(
+        field_name="virtual_machine", queryset=VirtualMachine.objects.all(), label="VM (ID)",
+    )
+    virtual_machine = django_filters.ModelMultipleChoiceFilter(
+        field_name="virtual_machine__name", to_field_name="name",
+        queryset=VirtualMachine.objects.all(), label="VM (name)",
+    )
 
     class Meta:
         model = WireGuardTunnel
         fields = [
-            "id", "name", "listen_port", "address", "public_key", "mtu", "enabled",
+            "id", "name", "listen_port", "address", "public_key", "mtu", "dns", "enabled",
             "assign_interface", "interface_name", "wg_instance",
         ]
 

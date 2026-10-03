@@ -12,7 +12,8 @@ from .filters import WireGuardPeerFilter, WireGuardTunnelFilter
 @strawberry_django.type(WireGuardTunnel, fields="__all__", filters=WireGuardTunnelFilter, pagination=True)
 class WireGuardTunnelType(NetBoxObjectType):
     name: str
-    device: Annotated["DeviceType", strawberry.lazy("dcim.graphql.types")]
+    device: Annotated["DeviceType", strawberry.lazy("dcim.graphql.types")] | None
+    virtual_machine: Annotated["VirtualMachineType", strawberry.lazy("virtualization.graphql.types")] | None
     peers: List[Annotated["WireGuardPeerType", strawberry.lazy("netbox_wireguard.graphql.types")]]
 
 

@@ -6,6 +6,7 @@ from .models import WireGuardPeer, WireGuardTunnel
 
 class WireGuardTunnelTable(NetBoxTable):
     device = tables.Column(linkify=True)
+    virtual_machine = tables.Column(linkify=True)
     name = tables.Column(linkify=True)
     enabled = columns.BooleanColumn()
     assign_interface = columns.BooleanColumn()
@@ -14,11 +15,11 @@ class WireGuardTunnelTable(NetBoxTable):
     class Meta(NetBoxTable.Meta):
         model = WireGuardTunnel
         fields = (
-            "pk", "id", "device", "name", "listen_port", "address", "public_key", "mtu",
+            "pk", "id", "device", "virtual_machine", "name", "listen_port", "address", "public_key", "mtu", "dns",
             "enabled", "assign_interface", "interface_name", "wg_instance",
             "description", "tags", "created", "last_updated",
         )
-        default_columns = ("device", "name", "listen_port", "address", "enabled")
+        default_columns = ("device", "virtual_machine", "name", "listen_port", "address", "enabled")
 
 
 class WireGuardPeerTable(NetBoxTable):

@@ -7,18 +7,24 @@ which the ansible-tofu reconcilers read back 1:1.
 """
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import Q
 from django.urls import reverse
 from netbox.models import NetBoxModel
 
 
 class WireGuardTunnel(NetBoxModel):
-    """A WireGuard tunnel interface on a device (e.g. OPNsense ``tun_wg0``).
+    """A WireGuard tunnel interface on exactly one host — a ``dcim.Device`` (e.g. OPNsense
+    ``tun_wg0``) or a ``virtualization.VirtualMachine`` (e.g. a guest's ``wg-airvpn1``).
 
     Holds the non-secret tunnel shape: listen port, interface CIDR, the tunnel's own
-    public key, MTU. The private key lives in OpenBao, NOT here.
+    public key, MTU, resolvers. The private key lives in OpenBao, NOT here.
     """
     device = models.ForeignKey(
-        "dcim.Device", on_delete=models.CASCADE, related_name="wg_tunnels"
+        "dcim.Device", on_delete=models.CASCADE, null=True, blank=True, related_name="wg_tunnels"
+    )
+    virtual_machine = models.ForeignKey(
+        "virtualization.VirtualMachine", on_delete=models.CASCADE, null=True, blank=True,
+        related_name="wg_tunnels",
     )
     name = models.CharField(max_length=64, help_text="Tunnel/interface name (e.g. tun_wg0).")
     listen_port = models.PositiveIntegerField(null=True, blank=True)
@@ -31,6 +37,10 @@ class WireGuardTunnel(NetBoxModel):
         help_text="Tunnel public key (NON-secret; the private key lives in OpenBao).",
     )
     mtu = models.PositiveIntegerField(null=True, blank=True)
+    dns = models.CharField(
+        max_length=255, blank=True,
+        help_text="Resolvers used while the tunnel is up, comma-separated (wg-quick DNS=); blank if none.",
+    )
     description = models.CharField(max_length=200, blank=True)
     enabled = models.BooleanField(default=True)
     assign_interface = models.BooleanField(
@@ -47,23 +57,38 @@ class WireGuardTunnel(NetBoxModel):
     )
 
     class Meta:
-        ordering = ["device", "name"]
+        ordering = ["device", "virtual_machine", "name"]
         verbose_name = "WireGuard Tunnel"
         constraints = [
             models.UniqueConstraint(
                 fields=["device", "name"], name="netbox_wireguard_tunnel_device_name"
             ),
+            models.UniqueConstraint(
+                fields=["virtual_machine", "name"], name="netbox_wireguard_tunnel_vm_name"
+            ),
+            models.CheckConstraint(
+                condition=Q(device__isnull=False, virtual_machine__isnull=True)
+                | Q(device__isnull=True, virtual_machine__isnull=False),
+                name="netbox_wireguard_tunnel_one_host",
+            ),
         ]
+
+    @property
+    def host(self):
+        """The tunnel's host — the device or the VM, whichever is set."""
+        return self.device or self.virtual_machine
 
     def clean(self):
         super().clean()
+        if bool(self.device_id) == bool(self.virtual_machine_id):
+            raise ValidationError("Set exactly one of device or virtual_machine as the host.")
         if self.assign_interface:
             missing = [f for f in ("interface_name", "wg_instance") if not getattr(self, f) and getattr(self, f) != 0]
             if missing:
                 raise ValidationError({f: "Required when assign_interface is set." for f in missing})
 
     def __str__(self):
-        return f"{self.device}: {self.name}"
+        return f"{self.host}: {self.name}"
 
     def get_absolute_url(self):
         return reverse("plugins:netbox_wireguard:wireguardtunnel", args=[self.pk])

@@ -75,9 +75,12 @@ never its value.
 | `graphql/` | GraphQL types (optional) |
 
 ### Model — the non-secret WireGuard SoT
-- **`WireGuardTunnel`**: `device` FK + `name` + `listen_port` + `address` (interface
-  CIDR, may be blank) + `public_key` (non-secret) + `mtu` + `description` + `enabled`.
-  Unique per `(device, name)`.
+- **`WireGuardTunnel`**: host = exactly one of `device` FK / `virtual_machine` FK
+  (`clean()` + check constraint `netbox_wireguard_tunnel_one_host`; `host` property) +
+  `name` + `listen_port` + `address` (interface CIDR, may be blank) + `public_key`
+  (non-secret) + `mtu` + `dns` + `description` + `enabled` + interface assignment
+  (`assign_interface`, `interface_name`, `wg_instance`). Unique per `(device, name)` and
+  per `(virtual_machine, name)`.
 - **`WireGuardPeer`**: `tunnel` FK + `name` + `public_key` + `endpoint` +
   `endpoint_port` + `allowed_ips` (multi-value, one CIDR per line / comma-separated) +
   `persistent_keepalive` + `has_preshared_key` (flag) + `description` + `enabled`.
