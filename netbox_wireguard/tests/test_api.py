@@ -95,5 +95,5 @@ class WireGuardPeerAPITest(*_CRUD):
             {"tunnel": tunnel.pk, "name": "tablet", "public_key": "pk11",
              "has_preshared_key": True, "persistent_keepalive": 25},
             {"tunnel": tunnel.pk, "name": "branch", "public_key": "pk12",
-             "allowed_ips": "10.1.0.0/16", "enabled": False},
+             "allowed_ips": "10.1.0.0/16", "enabled": False, "failover_priority": 1},
         ]

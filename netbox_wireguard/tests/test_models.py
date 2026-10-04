@@ -177,6 +177,25 @@ class WireGuardPeerModelTest(TestCase):
         with self.assertRaises(IntegrityError), transaction.atomic():
             WireGuardPeer.objects.create(tunnel=self.tunnel, name="dup", public_key="pkB")
 
+    def test_failover_priority_defaults_blank(self):
+        p = WireGuardPeer.objects.create(tunnel=self.tunnel, name="always-on", public_key="pk6")
+        self.assertIsNone(p.failover_priority)
+
+    def test_failover_priority_unique_per_tunnel(self):
+        WireGuardPeer.objects.create(tunnel=self.tunnel, name="srv-a", public_key="pk7", failover_priority=1)
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            WireGuardPeer.objects.create(tunnel=self.tunnel, name="srv-b", public_key="pk7", failover_priority=1)
+
+    def test_failover_priority_blank_not_unique(self):
+        WireGuardPeer.objects.create(tunnel=self.tunnel, name="n1", public_key="pk8")
+        WireGuardPeer.objects.create(tunnel=self.tunnel, name="n2", public_key="pk9")
+        self.assertEqual(self.tunnel.peers.filter(failover_priority__isnull=True).count(), 2)
+
+    def test_failover_priority_orders_peers(self):
+        WireGuardPeer.objects.create(tunnel=self.tunnel, name="a-second", public_key="pkS", failover_priority=2)
+        WireGuardPeer.objects.create(tunnel=self.tunnel, name="z-first", public_key="pkS", failover_priority=1)
+        self.assertEqual([p.name for p in self.tunnel.peers.all()], ["z-first", "a-second"])
+
     def test_cascade_delete_with_tunnel(self):
         WireGuardPeer.objects.create(tunnel=self.tunnel, name="p1", public_key="pk5")
         self.assertEqual(self.tunnel.peers.count(), 1)

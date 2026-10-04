@@ -53,7 +53,7 @@ class WireGuardPeerFilterSet(NetBoxModelFilterSet):
         model = WireGuardPeer
         fields = [
             "id", "name", "public_key", "endpoint", "endpoint_port",
-            "persistent_keepalive", "has_preshared_key", "enabled",
+            "persistent_keepalive", "has_preshared_key", "failover_priority", "enabled",
         ]
 
     def search(self, queryset, name, value):

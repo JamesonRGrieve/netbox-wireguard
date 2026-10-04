@@ -36,6 +36,7 @@ class WireGuardPeerForm(NetBoxModelForm):
         FieldSet("tunnel", "name", "enabled", name="Peer"),
         FieldSet("public_key", "has_preshared_key", name="Keys (non-secret)"),
         FieldSet("endpoint", "endpoint_port", "allowed_ips", "persistent_keepalive", name="Connection"),
+        FieldSet("failover_priority", name="Failover"),
         FieldSet("description", "tags", name="Misc"),
     )
 
@@ -43,7 +44,7 @@ class WireGuardPeerForm(NetBoxModelForm):
         model = WireGuardPeer
         fields = [
             "tunnel", "name", "public_key", "endpoint", "endpoint_port", "allowed_ips",
-            "persistent_keepalive", "has_preshared_key", "description", "enabled", "tags",
+            "persistent_keepalive", "has_preshared_key", "failover_priority", "description", "enabled", "tags",
         ]
 
 

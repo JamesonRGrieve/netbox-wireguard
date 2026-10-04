@@ -11,6 +11,7 @@
         <tr><th scope="row">Endpoint</th><td>{{ object.endpoint|placeholder }}</td></tr>
         <tr><th scope="row">Endpoint port</th><td>{{ object.endpoint_port|placeholder }}</td></tr>
         <tr><th scope="row">Persistent keepalive</th><td>{{ object.persistent_keepalive|placeholder }}</td></tr>
+        <tr><th scope="row">Failover priority</th><td>{{ object.failover_priority|placeholder }}</td></tr>
         <tr><th scope="row">Enabled</th><td>{% checkmark object.enabled %}</td></tr>
         <tr><th scope="row">Description</th><td>{{ object.description|placeholder }}</td></tr>
       </table>

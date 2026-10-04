@@ -31,7 +31,7 @@ class WireGuardPeerSerializer(NetBoxModelSerializer):
         fields = [
             "id", "url", "display", "tunnel", "name", "public_key", "endpoint",
             "endpoint_port", "allowed_ips", "persistent_keepalive", "has_preshared_key",
-            "description", "enabled",
+            "failover_priority", "description", "enabled",
             "tags", "custom_fields", "created", "last_updated",
         ]
         brief_fields = ["id", "url", "display", "tunnel", "name"]

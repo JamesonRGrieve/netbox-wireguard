@@ -120,15 +120,28 @@ class WireGuardPeer(NetBoxModel):
         default=False,
         help_text="Flag only: a PSK exists for this peer (the value lives in OpenBao, NOT here).",
     )
+    failover_priority = models.PositiveSmallIntegerField(
+        null=True, blank=True,
+        help_text=(
+            "Failover order among this tunnel's alternative peers (lowest = preferred). "
+            "Peers carrying a priority are mutually exclusive: the host runs one at a time "
+            "and moves to the next when the active one stops handshaking. Blank = always-on peer."
+        ),
+    )
     description = models.CharField(max_length=200, blank=True)
     enabled = models.BooleanField(default=True)
 
     class Meta:
-        ordering = ["tunnel", "name"]
+        ordering = ["tunnel", "failover_priority", "name"]
         verbose_name = "WireGuard Peer"
         constraints = [
             models.UniqueConstraint(
                 fields=["tunnel", "name"], name="netbox_wireguard_peer_tunnel_name"
+            ),
+            models.UniqueConstraint(
+                fields=["tunnel", "failover_priority"],
+                condition=models.Q(failover_priority__isnull=False),
+                name="netbox_wireguard_peer_tunnel_failover_priority",
             ),
         ]
 

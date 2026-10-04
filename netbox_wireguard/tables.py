@@ -33,7 +33,9 @@ class WireGuardPeerTable(NetBoxTable):
         model = WireGuardPeer
         fields = (
             "pk", "id", "tunnel", "name", "public_key", "endpoint", "endpoint_port",
-            "allowed_ips", "persistent_keepalive", "has_preshared_key", "enabled",
+            "allowed_ips", "persistent_keepalive", "has_preshared_key", "failover_priority", "enabled",
             "description", "tags", "created", "last_updated",
         )
-        default_columns = ("tunnel", "name", "endpoint", "allowed_ips", "has_preshared_key", "enabled")
+        default_columns = (
+            "tunnel", "name", "endpoint", "allowed_ips", "has_preshared_key", "failover_priority", "enabled",
+        )
